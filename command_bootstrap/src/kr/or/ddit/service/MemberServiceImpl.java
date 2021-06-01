@@ -8,6 +8,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 
 import kr.or.ddit.dao.MemberDAO;
 import kr.or.ddit.dto.MemberVO;
+import kr.or.ddit.exception.InvalidPasswordException;
 import kr.or.ddit.exception.NotFoundIdException;
 
 public class MemberServiceImpl implements MemberService {
@@ -24,21 +25,42 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public void login(String id, String pwd) throws SQLException, NotFoundIdException {
-		SqlSession session
+	public void login(String id, String pwd) throws SQLException, NotFoundIdException, InvalidPasswordException {
+		SqlSession session = sqlSessionFactory.openSession();
+		try {
+			MemberVO mv = memberDAO.selectMemberById(session, id);
+			if(mv == null) {
+				throw new NotFoundIdException();
+			}
+			if(!pwd.equals(mv.getPwd())) {
+				throw new InvalidPasswordException();
+			}
+		} finally {
+			session.close();
+		}
 
 	}
 
 	@Override
 	public MemberVO getMember(String id) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		SqlSession session = sqlSessionFactory.openSession();
+		
+		try {
+			MemberVO mv = memberDAO.selectMemberById(session, id);
+			return mv;
+		} finally {
+			session.close();
+		}
 	}
 
 	@Override
 	public List<MemberVO> getMemberList() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		SqlSession session = sqlSessionFactory.openSession();
+		try {
+			List<MemberVO> memberList = memberDAO.selectMemberList(session);
+			return memberList;
+		} finally {
+			session.close();
+		}
 	}
-
 }
